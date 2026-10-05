@@ -11,12 +11,14 @@ import shutil
 import random
 import glob
 import numpy as np
+from unittest.mock import patch
 from pmagpy import pmag
 from pmagpy import ipmag
 from pmagpy import contribution_builder as cb
 from pmagpy import convert_2_magic as convert
 from pmagpy import validate_upload3 as val_up3
 from pmag_env import set_env
+from programs import upload_magic as upload_magic_program
 #from pmagpy import find_pmag_dir
 WD = pmag.get_test_WD()
 
@@ -74,42 +76,11 @@ class TestUploadMagic(unittest.TestCase):
         os.chdir(WD)
 
 
-    def test_empty_dir(self):
-        directory = os.path.join(self.dir_path, 'empty_dir')
-        outfile, error_message, errors = ipmag.upload_magic2(dir_path=directory)
-        self.assertFalse(errors)
-        self.assertFalse(outfile)
-        self.assertEqual(error_message, "no data found, upload file not created")
-        files = os.listdir(directory)
-        self.assertEqual(['blank.txt'], files)
-
-    def test_with_invalid_files(self):
-        directory = os.path.join(self.dir_path, 'my_project_with_errors')
-        outfile, error_message, errors = ipmag.upload_magic2(dir_path=directory)
-        self.assertTrue(errors)
-        self.assertFalse(outfile)
-        self.assertTrue(error_message.startswith("Validation of your upload file has failed.\nYou can still upload"))
-        directory = os.path.join(self.dir_path, 'my_project_with_errors')
-
-        # delete any upload file that was partially created
-        import re
-        pattern = re.compile('\w*[.]\w*[.]\w*[20]\d{2}\w*.txt$')
-        possible_files = os.listdir(directory)
-        files = []
-        for f in possible_files:
-            if pattern.match(f):
-                files.append(f)
-        pmag.remove_files(files, directory)
-
-    def test_with_valid_files(self):
-        #print os.path.join(self.dir_path, 'my_project')
-        outfile, error_message, errors = ipmag.upload_magic2(dir_path=os.path.join(self.dir_path, 'my_project'))
-        self.assertTrue(outfile)
-        self.assertEqual(error_message, '')
-        self.assertFalse(errors)
-        assert os.path.isfile(outfile)
-        directory = os.path.join(self.dir_path, 'my_project_with_errors')
-        os.remove(os.path.join(directory, outfile))
+    def test_dm2_is_rejected(self):
+        with patch.object(sys, 'argv', ['upload_magic.py', '-DM', '2']), \
+                patch.object(upload_magic_program.pmag, 'get_named_arg', return_value='2'), \
+                self.assertRaisesRegex(SystemExit, 'Convert Data Model 2 files to Data Model 3'):
+            upload_magic_program.main()
 
     def test3_with_invalid_files(self):
         dir_path = os.path.join(WD, 'data_files', '3_0', 'Megiddo')
