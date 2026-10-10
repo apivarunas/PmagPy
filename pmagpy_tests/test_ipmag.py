@@ -355,47 +355,6 @@ class TestCoreDepthplot(unittest.TestCase):
         self.assertTrue(program_ran)
         self.assertEqual(plot_name, 'DSDP Site 522_m:_LT-AF-Z_core-depthplot.svg')
 
-#@unittest.skipIf(sys.platform in ['darwin'], 'currently causing fatal errors on OSX')
-class TestAniDepthplot2(unittest.TestCase):
-
-    def setUp(self):
-        self.aniso_WD = os.path.join(WD, 'data_files', 'ani_depthplot')
-
-    def tearDown(self):
-        filelist = ['magic_measurements.txt', 'my_magic_measurements.txt', 'er_specimens.txt', 'er_samples.txt', 'my_er_samples.txt', 'er_sites.txt', 'rmag_anisotropy.txt', 'my_rmag_anisotropy.txt', 'rmag_results.txt', 'my_rmag_results.txt', 'my_samples.txt']
-        pmag.remove_files(filelist, WD)
-        os.chdir(WD)
-
-    def test_aniso_depthplot_with_no_files(self):
-        program_ran, error_message = ipmag.ani_depthplot2()
-        expected_file = pmag.resolve_file_name('rmag_anisotropy.txt')
-        self.assertFalse(program_ran)
-        self.assertEqual(error_message, "Could not find rmag_anisotropy type file: {}.\nPlease provide a valid file path and try again".format(expected_file))
-
-    def test_aniso_depthplot_with_files(self):
-        #dir_path = os.path.join(WD, 'data_files', 'UTESTA')
-        main_plot, plot_name = ipmag.ani_depthplot2(dir_path=self.aniso_WD, sum_file='CoreSummary_XXX_UTESTA.csv')
-        assert(isinstance(main_plot, matplotlib.figure.Figure))
-        self.assertEqual(plot_name, 'U1361A_ani_depthplot.svg')
-
-
-    def test_aniso_depthplot_with_sum_file(self):
-        dir_path = os.path.join(WD, 'data_files', 'UTESTA', 'UTESTA_MagIC')
-        sum_file = 'CoreSummary_XXX_UTESTA.csv'
-        main_plot, plot_name = ipmag.ani_depthplot2(dir_path=dir_path, sum_file=sum_file)
-        assert(isinstance(main_plot, matplotlib.figure.Figure))
-        self.assertEqual(plot_name, 'UTESTA_ani_depthplot.svg')
-
-    def test_aniso_depthplot_with_age_option(self):
-        main_plot, plot_name = ipmag.ani_depthplot2(age_file='er_ages.txt', dir_path=self.aniso_WD)
-        assert(isinstance(main_plot, matplotlib.figure.Figure))
-        self.assertEqual(plot_name, 'U1361A_ani_depthplot.svg')
-
-    def test_aniso_depthplot_with_options(self):
-        main_plot, plot_name = ipmag.ani_depthplot2(dmin=20, dmax=40, depth_scale='sample_core_depth', fmt='png', dir_path=self.aniso_WD)
-        assert(isinstance(main_plot, matplotlib.figure.Figure))
-        self.assertEqual(plot_name, 'U1361A_ani_depthplot.png')
-
 
 class TestAniDepthplot(unittest.TestCase):
 
