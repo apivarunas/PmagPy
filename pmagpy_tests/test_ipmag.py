@@ -10,6 +10,7 @@ import requests
 import shutil
 import random
 import glob
+import tempfile
 import numpy as np
 from unittest.mock import patch
 from pmagpy import pmag
@@ -975,6 +976,25 @@ class TestZeqMagic(unittest.TestCase):
         for f in outfiles:
             self.assertTrue(os.path.exists(f))
         self.assertEqual(9, len(outfiles))
+
+    def test_vector_mean_interpretations(self):
+        tmp = tempfile.mkdtemp()
+        try:
+            for name in ("measurements.txt", "specimens.txt", "samples.txt"):
+                shutil.copy(os.path.join("data_files", "3_0", "McMurdo", name), tmp)
+            spec_file = os.path.join(tmp, "specimens.txt")
+            with open(spec_file) as f:
+                text = f.read()
+            # relabel the free-line fits as vector means
+            text = re.sub(r"DE-BFL(?![-\w])", "DE-VM", text)
+            with open(spec_file, "w") as f:
+                f.write(text)
+            res, outfiles = ipmag.zeq_magic(input_dir_path=tmp, spec_file="specimens.txt",
+                                            fmt="png", n_plots=3)
+            self.assertTrue(res)
+            self.assertEqual(9, len(outfiles))
+        finally:
+            shutil.rmtree(tmp)
 
     @unittest.skipIf(set_env.IS_WIN, "memory error on windows")
     def test_success_with_interpretations_long(self):

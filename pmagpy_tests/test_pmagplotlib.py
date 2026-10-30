@@ -7,6 +7,41 @@ from pmagpy import pmagplotlib
 from pmag_env import set_env
 WD = pmag.get_test_WD()
 import matplotlib
+import matplotlib.pyplot as plt
+
+
+class TestPlotDir(unittest.TestCase):
+    """pmagplotlib.plot_dir draws the fit on the Zijderveld plot."""
+
+    def setUp(self):
+        self.ZED = {'eqarea': 1, 'zijd': 2}
+        plt.figure(1)
+        plt.figure(2)
+        steps = [(10., 40., 5.), (15., 45., 4.), (20., 50., 3.), (22., 48., 2.), (25., 52., 1.)]
+        self.data = [[i, d, inc, m, 'g'] for i, (d, inc, m) in enumerate(steps)]
+
+    def tearDown(self):
+        plt.close('all')
+
+    def fit_line(self, calculation_type):
+        mpars = pmag.domean(self.data, 0, 4, calculation_type)
+        pmagplotlib.plot_dir(self.ZED, mpars, self.data, 0)
+        line = plt.figure(2).gca().lines[-2]  # the x-y line; the x-z line follows
+        return mpars, line.get_xdata(), line.get_ydata()
+
+    def test_vector_mean_from_origin(self):
+        mpars, x, y = self.fit_line('DE-VM')
+        self.assertEqual((x[0], y[0]), (0., 0.))
+        self.assertGreater(abs(x[1]), 0)
+
+    def test_anchored_line_from_origin(self):
+        mpars, x, y = self.fit_line('DE-BFL-A')
+        self.assertEqual((x[0], y[0]), (0., 0.))
+
+    def test_free_line_about_centre_of_mass(self):
+        mpars, x, y = self.fit_line('DE-BFL')
+        self.assertNotEqual((x[0], y[0]), (0., 0.))
+        self.assertAlmostEqual((x[0] + x[1])/2, mpars['center_of_mass'][0]/self.data[0][3])
 
 
 class TestPlotMagMap(unittest.TestCase):

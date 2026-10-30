@@ -1035,8 +1035,9 @@ def plot_dir(ZED, pars, datablock, angle):
     For a line fit, the best-fit direction is added to the equal area plot
     and the bounding steps and best-fit line are added to the Zijderveld
     plot. For a plane fit (DE-BFP) the bounding steps and the great circle
-    are added to the equal area plot. For a Fisher mean (DE-FM) only the
-    mean direction is plotted.
+    are added to the equal area plot. Anchored lines (DE-BFL-A) and vector
+    means (DE-VM) are drawn from the origin. For a Fisher mean (DE-FM) only
+    the mean direction is plotted.
 
     Parameters
     ----------
@@ -1113,8 +1114,13 @@ def plot_dir(ZED, pars, datablock, angle):
 #          Xs.append(P1[i]+us*(P2[i]-P1[i]))
 #          Xe.append(P1[i]+ue*(P2[i]-P1[i]))
 #   old way:
-        cm = pars["center_of_mass"]
-        if cm != [0., 0., 0.]:
+        if pars["calculation_type"] in ('DE-BFL-A', 'DE-VM'):
+            # anchored lines and vector means pass through the origin and
+            # run out to the outermost step along the fit direction
+            u = pmag.dir2cart([pars["specimen_dec"] - angle, pars["specimen_inc"], 1.])
+            length = max(np.dot(XYZs, u), np.dot(XYZe, u))
+            px, py, pz = [0., length*u[0]], [0., length*u[1]], [0., length*u[2]]
+        else:
             cm = np.array(pars["center_of_mass"])/datablock[0][3]
             cmDir = pmag.cart2dir(cm)
             cmDir[0] = cmDir[0] - angle
